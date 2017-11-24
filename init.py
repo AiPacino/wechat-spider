@@ -11,7 +11,7 @@ Created on 2017-01-03 13:40
 import os
 import sys
 
-PROJECT_NAME = 'iopm-service'
+PROJECT_NAME = 'wechat-spider'
 
 current_path = os.getcwd()
 project_path = current_path[:current_path.find(PROJECT_NAME) + len(PROJECT_NAME)]

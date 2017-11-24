@@ -9,12 +9,58 @@ Created on 2017-09-22 15:55
 import sys
 sys.path.append('..')
 
+import collections
+
 from utils.log import log
 import utils.tools as tools
+from db.oracledb import OracleDB
+
+SIZE = 100
 
 class WechatService():
+    _todo_accounts = collections.deque()
+    _rownum = 1
+
+    _is_done = False
+
     def __init__(self):
-        pass
+        self._db = OracleDB()
+        self.load_todo_account()
+
+    def load_todo_account(self):
+        if not WechatService._todo_accounts:
+            sql = '''
+                select *
+                  from (select rownum r, t.id, t.biz
+                          from TAB_WECHAT_ACCOUNT t
+                         where rownum < {size})
+                 where r >= {rownum}
+                '''.format(rownum = WechatService._rownum, size = WechatService._rownum + SIZE)
+
+            results = self._db.find(sql)
+            if not results:
+                WechatService._is_done = True
+                WechatService._rownum = 1
+                self.load_todo_account()
+            else:
+                WechatService. _todo_accounts = collections.deque(results) #  转为队列
+                WechatService._rownum += SIZE
+
+    def get_next_account(self):
+        '''
+        @summary:
+        ---------
+        ---------
+        @result: 返回biz, 是否已做完一圈 (biz, True)
+        '''
+        if not WechatService._todo_accounts:
+            self.load_todo_account()
+
+        next_account = WechatService._todo_accounts.popleft()[2], WechatService._is_done
+        # 重置_is_done 状态
+        WechatService._is_done =  False
+
+        return next_account
 
     def add_article_info(self, article_info):
         '''
@@ -29,3 +75,7 @@ class WechatService():
         log.debug('''
             -----文章信息-----
             %s'''%tools.dumps_json(article_info))
+
+if __name__ == '__main__':
+    # wechat = WechatService()
+    pass

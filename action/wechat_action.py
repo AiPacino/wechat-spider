@@ -17,7 +17,9 @@ import web
 import json
 from service.wechat_service import WechatService
 
-SLEEP_TIME = 2000 # 2000 毫秒
+SLEEP_TIME = 2000 # 每个历史列表、文章详情、点赞观看数、评论信息时间间隔  毫秒
+WAIT_TIME = 1000 * 60 * 60 # 做完所有公众号后休息的时间，然后做下一轮
+WAIT_TIME = 5000
 
 class WechatAction():
     _todo_urls = collections.deque() # 待做的url
@@ -45,19 +47,22 @@ class WechatAction():
         ---------
         @result:
         '''
+        is_done = False # 是否做完一轮
+
         if WechatAction._todo_urls:
             url = WechatAction._todo_urls.popleft()
         else:
             # 跳转到下一个公众号
-            # url = 'http://mp.weixin.qq.com/mp/getmasssendmsg?__biz=%s==#wechat_webview_type=1&wechat_redirect'%__biz
-            url = ''
+            __biz, is_done = self._wechat_service.get_next_account()
+            url = 'http://mp.weixin.qq.com/mp/getmasssendmsg?__biz=%s#wechat_webview_type=1&wechat_redirect'%__biz
 
         log.debug('''
             next_page_url : %s
-            '''%url)
+            is_done:        %s
+            '''%(url, is_done))
 
         # 注入js脚本实现自动跳转
-        next_page = "<script>setTimeout(function(){window.location.href='%s';},%d);</script>"%(url, SLEEP_TIME)
+        next_page = "<script>setTimeout(function(){window.location.href='%s';},%d);</script>"%(url, SLEEP_TIME if not is_done else WAIT_TIME)
 
         return next_page
 

@@ -96,7 +96,7 @@ logging.getLogger("build_extension").setLevel(logging.WARNING)
 #日志级别大小关系为：critical > error > warning > info > debug
 
 import os
-PROJECT_NAME = 'iopm-service'
+PROJECT_NAME = 'wechat-spider'
 CURRENT_PATH = os.getcwd()
 PROJECT_PATH = CURRENT_PATH[:CURRENT_PATH.find(PROJECT_NAME) + len(PROJECT_NAME)]
 log= get_logger(PROJECT_NAME + '.log', PROJECT_PATH + '\\log\\')
