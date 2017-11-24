@@ -130,7 +130,7 @@ class WechatAction():
             author = article_info.get('author')
             if url: # 被发布者删除的文章 无url和其他信息， 此时取不到mid 且不用入库
                 article_id = tools.get_param(url, 'mid')
-                WechatAction._todo_urls.append(url.replace('http://mp.weixin.qq.com', ''))
+                __biz = tools.get_param(url, '__biz') # 用于关联公众号
 
                 # 缓存文章信息
                 WechatAction._article_info[article_id] = {
@@ -141,9 +141,12 @@ class WechatAction():
                     'url' : url,
                     'source_url' : source_url,
                     'cover' : cover,
-                    'author' : author
+                    'author' : author,
+                    '__biz' : __biz
                 }
 
+                # 将文章url添加到待抓取队列
+                WechatAction._todo_urls.append(url)
 
         # log.debug(tools.dumps_json(article_list))
         article_list = tools.get_json(article_list)
