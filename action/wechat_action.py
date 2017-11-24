@@ -9,6 +9,8 @@ Created on 2017-09-22 15:55
 import sys
 sys.path.append('..')
 
+import collections
+
 from utils.log import log
 import utils.tools as tools
 import web
@@ -18,24 +20,21 @@ from service.wechat_service import WechatService
 SLEEP_TIME = 2000 # 2000 毫秒
 
 class WechatAction():
+    _todo_urls = collections.deque() # 待做的url
+
+    _article_info = { # 缓存文章信息，第一次缓存列表信息、第二次缓存观看量点赞量，第三次直到评论信息也取到后，则入库
+        "article_id":{
+            "title":"",
+            "content":"",
+            #....
+        }
+    }
+
+
     def __init__(self):
         self._wechat_service = WechatService()
 
-    def __open_next_account(self, __biz):
-        '''
-        @summary: 跳转到下一个公众号
-        ---------
-        @param __biz:
-        ---------
-        @result:
-        '''
-
-        url = 'http://mp.weixin.qq.com/mp/getmasssendmsg?__biz=%s==#wechat_webview_type=1&wechat_redirect'%__biz
-        nextAccount = "<script>setTimeout(function(){window.location.href='%s';},%d);</script>"%(url, SLEEP_TIME)
-
-        return nextAccount
-
-    def __open_next_page(self, __biz, pass_ticket, appmsg_token, offset = 10):
+    def __open_next_page(self):
         '''
         @summary: 跳转到历史文章
         ---------
@@ -46,15 +45,21 @@ class WechatAction():
         ---------
         @result:
         '''
-        url = 'https://mp.weixin.qq.com/mp/profile_ext?action=getmsg&__biz={__biz}&f=json&offset={offset}&count=10&is_ok=1&scene=124&uin=777&key=777&pass_ticket={pass_ticket}&wxtoken=&appmsg_token={appmsg_token}&x5=0&f=json'.format(__biz = __biz, offset = offset, pass_ticket = pass_ticket, appmsg_token = appmsg_token)
+        if WechatAction._todo_urls:
+            url = WechatAction._todo_urls.popleft()
+        else:
+            # 跳转到下一个公众号
+            # url = 'http://mp.weixin.qq.com/mp/getmasssendmsg?__biz=%s==#wechat_webview_type=1&wechat_redirect'%__biz
+            url = ''
 
         log.debug('''
-            nextPageUrl : %s
+            next_page_url : %s
             '''%url)
 
-        nextPage = "<script>setTimeout(function(){window.location.href='%s';},%d);</script>"%(url, SLEEP_TIME)
+        # 注入js脚本实现自动跳转
+        next_page = "<script>setTimeout(function(){window.location.href='%s';},%d);</script>"%(url, SLEEP_TIME)
 
-        return nextPage
+        return next_page
 
     def __parse_account_info(self, data):
         pass
@@ -109,46 +114,58 @@ class WechatAction():
         ---------
         @result:
         '''
+        log.debug(tools.dumps_json(article_list))
+
+        # 解析json内容里文章信息
+        def parse_article_info(article_info, release_time):
+            if not article_info:
+                return
+
+            # log.debug(tools.dumps_json(article_info))
+            title = article_info.get('title')
+            summary = article_info.get('digest')
+            url = article_info.get('content_url').replace('\\', '').replace('amp;', '')
+            source_url = article_info.get('source_url').replace('\\', '')  # 引用的文章链接
+            cover = article_info.get('cover').replace('\\', '')
+            author = article_info.get('author')
+            if url: # 被发布者删除的文章 无url和其他信息， 此时取不到mid 且不用入库
+                article_id = tools.get_param(url, 'mid')
+                WechatAction._todo_urls.append(url.replace('http://mp.weixin.qq.com', ''))
+
+                # 缓存文章信息
+                WechatAction._article_info[article_id] = {
+                    'article_id':int(article_id),
+                    'title' : title,
+                    'summary' : summary,
+                    'release_time':release_time,
+                    'url' : url,
+                    'source_url' : source_url,
+                    'cover' : cover,
+                    'author' : author
+                }
+
 
         # log.debug(tools.dumps_json(article_list))
         article_list = tools.get_json(article_list)
 
         article_list = article_list.get('list', [])
         for article in article_list:
-            log.debug(tools.dumps_json(article))
+            article_type = article.get('comm_msg_info', {}).get('type')
+            if article_type != 49: # 49为常见的图文消息、其他消息有文本、语音、视频，此处不采集，格式不统一
+                continue
+
             release_time = article.get('comm_msg_info', {}).get('datetime')
             release_time = tools.timestamp_to_date(release_time)
 
             # 微信公众号每次可以发多个图文消息
             # 第一个图文消息
             app_msg_ext_info = article.get('app_msg_ext_info', {})
-            title = app_msg_ext_info.get('title')
-            summary = app_msg_ext_info.get('digest')
-            url = app_msg_ext_info.get('content_url').replace('\\', '').replace('amp;', '')
-            source_url = app_msg_ext_info.get('source_url').replace('\\', '')  # 引用的文章链接
-            cover = app_msg_ext_info.get('cover').replace('\\', '')
-            author = app_msg_ext_info.get('author')
-            if url: # 被发布者删除的文章 无url和其他信息， 此时取不到mid 且不用入库
-                article_id = int(tools.get_param(url, 'mid'))
-
-                # 入库
-                self._wechat_service.add_article_info(release_time, title, summary, url, source_url, cover, author, article_id)
+            parse_article_info(app_msg_ext_info, release_time)
 
             # 同一天附带的图文消息
             multi_app_msg_item_list = app_msg_ext_info.get('multi_app_msg_item_list')
             for multi_app_msg_item in multi_app_msg_item_list:
-                title = multi_app_msg_item.get('title')
-                summary = multi_app_msg_item.get('digest')
-                url = multi_app_msg_item.get('content_url').replace('\\', '').replace('amp;', '')
-                source_url = multi_app_msg_item.get('source_url').replace('\\', '') # 引用的文章链接
-                cover = multi_app_msg_item.get('cover').replace('\\', '')
-                author = multi_app_msg_item.get('author')
-                if url: # 被发布者删除的文章 无url和其他信息， 此时取不到mid 且不用入库
-                    article_id = int(tools.get_param(url, 'mid'))
-
-                    # 入库
-                    self._wechat_service.add_article_info(release_time, title, summary, url, source_url, cover, author, article_id)
-
+                parse_article_info(app_msg_ext_info, release_time)
 
     def get_article_list(self, data, req_url):
         '''
@@ -176,7 +193,6 @@ class WechatAction():
             regex = "can_msg_continue = '(\d)'"
             can_msg_continue = tools.get_info(data, regex, fetch_one = True)
             if can_msg_continue == '0':# 无更多文章
-                # 跳转到下一个公众号 TODO
                 pass
             else:
                 # 以下是拼接下拉显示更多的历史文章 跳转
@@ -188,8 +204,8 @@ class WechatAction():
                 __biz = tools.get_param(req_url, '__biz')
                 pass_ticket = tools.get_param(req_url, 'pass_ticket')
 
-                # 返回跳转到下一页
-                return self.__open_next_page(__biz, pass_ticket, appmsg_token)
+                next_page_url = 'https://mp.weixin.qq.com/mp/profile_ext?action=getmsg&__biz={__biz}&f=json&offset={offset}&count=10&is_ok=1&scene=124&uin=777&key=777&pass_ticket={pass_ticket}&wxtoken=&appmsg_token={appmsg_token}&x5=0&f=json'.format(__biz = __biz, offset = 10, pass_ticket = pass_ticket, appmsg_token = appmsg_token)
+                WechatAction._todo_urls.append(next_page_url)
 
         else:# json格式
             data = tools.get_json(data)
@@ -199,7 +215,6 @@ class WechatAction():
             #判断是否还有更多文章 没有跳转到下个公众号，有则下拉显示更多
             can_msg_continue = data.get('can_msg_continue')
             if not can_msg_continue: # 无更多文章
-                # 跳转到下一个公众号 TODO
                 pass
             else:
                 # 以下是拼接下拉显示更多的历史文章 跳转
@@ -211,19 +226,84 @@ class WechatAction():
                 # 取offset 在json中
                 offset = data.get('next_offset', 0)
 
-                # 返回跳转到下一页
-                return self.__open_next_page(__biz, pass_ticket, appmsg_token, offset)
+                next_page_url = 'https://mp.weixin.qq.com/mp/profile_ext?action=getmsg&__biz={__biz}&f=json&offset={offset}&count=10&is_ok=1&scene=124&uin=777&key=777&pass_ticket={pass_ticket}&wxtoken=&appmsg_token={appmsg_token}&x5=0&f=json'.format(__biz = __biz, offset = offset, pass_ticket = pass_ticket, appmsg_token = appmsg_token)
+                WechatAction._todo_urls.append(next_page_url)
 
-    def get_article_info(self, data, req_url):
-        log.debug('获取文章信息')
+        return self.__open_next_page()
+
+    def get_article_content(self, data, req_url):
+        log.debug('获取文章内容')
+
+        article_id = tools.get_param(req_url, 'mid')
+
+        regex = '(<div class="rich_media_content " id="js_content">.*?)<script nonce'
+        content = tools.get_info(data, regex, fetch_one = True)
+
+        # 缓存文章内容
+        WechatAction._article_info[article_id]['content'] = content
+
+        return self.__open_next_page()
 
     def get_read_watched_count(self, data, req_url):
+        '''
+        @summary:
+        ---------
+        @param data:
+        {
+            "advertisement_num":0,
+            "advertisement_info":[
+
+            ],
+            "appmsgstat":{
+                "show":true,
+                "is_login":true,
+                "liked":false,
+                "read_num":38785,
+                "like_num":99,
+                "ret":0,
+                "real_read_num":0
+            },
+            "comment_enabled":1,
+            "reward_head_imgs":[
+
+            ],
+            "only_fans_can_comment":false,
+            "is_ios_reward_open":0,
+            "base_resp":{
+                "wxtoken":3465907592
+            }
+        }
+        @param req_url:
+        ---------
+        @result:
+        '''
+
         log.debug('获取观看和评论量')
-        pass
+
+        req_url = req_url.replace('amp;', '')
+        article_id = tools.get_param(req_url, 'mid')
+
+        data = tools.get_json(data)
+        read_num = data.get('appmsgstat', {}).get('read_num')
+        like_num = data.get('appmsgstat', {}).get('like_num')
+
+        # 缓存文章阅读量点赞量
+        WechatAction._article_info[article_id]['read_num'] = read_num
+        WechatAction._article_info[article_id]['like_num'] = like_num
 
     def get_comment(self, data, req_url):
         log.debug('获取评论信息')
-        pass
+
+        req_url = req_url.replace('amp;', '')
+        article_id = tools.get_param(req_url, 'appmsgid')
+
+        data = tools.get_json(data)
+        comment = data.get('elected_comment', []) # 精选留言
+
+        # 缓存文章评论信息
+        WechatAction._article_info[article_id]['comment'] = comment
+
+        self._wechat_service.add_article_info(WechatAction._article_info.pop(article_id))
 
     def deal_request(self, name):
         web.header('Content-Type','text/html;charset=UTF-8')
@@ -246,8 +326,8 @@ class WechatAction():
         if name == 'get_article_list':
             reponse = self.get_article_list(data, req_url)
 
-        elif name == 'get_article_info':
-            reponse = self.get_article_info(data, req_url)
+        elif name == 'get_article_content':
+            reponse = self.get_article_content(data, req_url)
 
         elif name == 'get_read_watched_count':
             reponse = self.get_read_watched_count(data, req_url)
@@ -270,6 +350,3 @@ class WechatAction():
 
 if __name__ == '__main__':
     pass
-
-    #TODO
-    # 文章跳转
