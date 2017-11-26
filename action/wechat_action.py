@@ -17,9 +17,9 @@ import web
 import json
 from service.wechat_service import WechatService
 
-SLEEP_TIME = 2000 # 每个历史列表、文章详情、点赞观看数、评论信息时间间隔  毫秒
+SLEEP_TIME = 10000 # 每个历史列表、文章详情时间间隔  毫秒
 WAIT_TIME = 1000 * 60 * 60 # 做完所有公众号后休息的时间，然后做下一轮
-WAIT_TIME = 5000
+WAIT_TIME = 25000
 
 class WechatAction():
     _todo_urls = collections.deque() # 待做的url
@@ -55,7 +55,9 @@ class WechatAction():
             # 跳转到下一个公众号
             __biz, is_done = self._wechat_service.get_next_account()
             url = 'http://mp.weixin.qq.com/mp/getmasssendmsg?__biz=%s#wechat_webview_type=1&wechat_redirect'%__biz
-
+            log.debug('''
+                下一个公众号 ： %s
+                '''%url)
         log.debug('''
             next_page_url : %s
             is_done:        %s
@@ -134,7 +136,10 @@ class WechatAction():
             cover = article_info.get('cover').replace('\\', '')
             author = article_info.get('author')
             if url: # 被发布者删除的文章 无url和其他信息， 此时取不到mid 且不用入库
-                article_id = tools.get_param(url, 'mid')
+                mid = tools.get_param(url, 'mid') # 图文消息id 同一天发布的图文消息 id一样
+                idx = tools.get_param(url, 'idx') # 第几条图文消息 从1开始
+                article_id = mid + idx # 用mid和idx 拼接 确定唯一一篇文章 如mid = 2650492260  idx = 1，则article_id = 26504922601
+
                 __biz = tools.get_param(url, '__biz') # 用于关联公众号
 
                 # 缓存文章信息
@@ -147,7 +152,8 @@ class WechatAction():
                     'source_url' : source_url,
                     'cover' : cover,
                     'author' : author,
-                    '__biz' : __biz
+                    '__biz' : __biz,
+                    'record_time':tools.get_current_date()
                 }
 
                 # 将文章url添加到待抓取队列
@@ -173,7 +179,7 @@ class WechatAction():
             # 同一天附带的图文消息
             multi_app_msg_item_list = app_msg_ext_info.get('multi_app_msg_item_list')
             for multi_app_msg_item in multi_app_msg_item_list:
-                parse_article_info(app_msg_ext_info, release_time)
+                parse_article_info(multi_app_msg_item, release_time)
 
     def get_article_list(self, data, req_url):
         '''
@@ -242,7 +248,10 @@ class WechatAction():
     def get_article_content(self, data, req_url):
         log.debug('获取文章内容')
 
-        article_id = tools.get_param(req_url, 'mid')
+        req_url = req_url.replace('amp;', '')
+        mid = tools.get_param(req_url, 'mid') # 图文消息id 同一天发布的图文消息 id一样
+        idx = tools.get_param(req_url, 'idx') # 第几条图文消息 从1开始
+        article_id = mid + idx # 用mid和idx 拼接 确定唯一一篇文章 如mid = 2650492260  idx = 1，则article_id = 26504922601
 
         regex = '(<div class="rich_media_content " id="js_content">.*?)<script nonce'
         content = tools.get_info(data, regex, fetch_one = True)
@@ -289,7 +298,9 @@ class WechatAction():
         log.debug('获取观看和评论量')
 
         req_url = req_url.replace('amp;', '')
-        article_id = tools.get_param(req_url, 'mid')
+        mid = tools.get_param(req_url, 'mid') # 图文消息id 同一天发布的图文消息 id一样
+        idx = tools.get_param(req_url, 'idx') # 第几条图文消息 从1开始
+        article_id = mid + idx # 用mid和idx 拼接 确定唯一一篇文章 如mid = 2650492260  idx = 1，则article_id = 26504922601
 
         data = tools.get_json(data)
         read_num = data.get('appmsgstat', {}).get('read_num')
@@ -303,7 +314,9 @@ class WechatAction():
         log.debug('获取评论信息')
 
         req_url = req_url.replace('amp;', '')
-        article_id = tools.get_param(req_url, 'appmsgid')
+        mid = tools.get_param(req_url, 'appmsgid') # 图文消息id 同一天发布的图文消息 id一样
+        idx = tools.get_param(req_url, 'idx') # 第几条图文消息 从1开始
+        article_id = mid + idx # 用mid和idx 拼接 确定唯一一篇文章 如mid = 2650492260  idx = 1，则article_id = 26504922601
 
         data = tools.get_json(data)
         comment = data.get('elected_comment', []) # 精选留言
@@ -346,6 +359,7 @@ class WechatAction():
         # log.debug('''
         #     ---------reponse---------
         #     %s'''%reponse)
+        log.debug(WechatAction._todo_urls)
 
         return reponse # 此处返回''空字符串  不会触发node-js http 的回调
 

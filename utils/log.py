@@ -81,15 +81,41 @@ def get_logger(name = 'log.log', path = ''):
 
 # logging.disable(logging.DEBUG) # 关闭所有log
 
-# 不让 requests打印debug日志 看着乱
-logging.getLogger("requests").setLevel(logging.WARNING)
-logging.getLogger("selenium.webdriver.remote.remote_connection").setLevel(logging.WARNING)
-logging.getLogger("selenium.webdriver.remote").setLevel(logging.WARNING)
-logging.getLogger("selenium.webdriver").setLevel(logging.WARNING)
-logging.getLogger("selenium").setLevel(logging.WARNING)
+# 不让打印log的配置
+STOP_LOGS = [
+    # ES
+    'urllib3.response',
+    'urllib3.connection',
+    'elasticsearch.trace',
+    'requests.packages.urllib3.util',
+    'requests.packages.urllib3.util.retry',
+    'urllib3.util',
+    'requests.packages.urllib3.response',
+    'requests.packages.urllib3.contrib.pyopenssl',
+    'requests.packages',
+    'urllib3.util.retry',
+    'requests.packages.urllib3.contrib',
+    'requests.packages.urllib3.connectionpool',
+    'requests.packages.urllib3.poolmanager',
+    'urllib3.connectionpool',
+    'requests.packages.urllib3.connection',
+    'elasticsearch',
 
-logging.getLogger("MARKDOWN").setLevel(logging.WARNING)
-logging.getLogger("build_extension").setLevel(logging.WARNING)
+    # requests
+    'requests',
+    'selenium.webdriver.remote.remote_connection',
+    'selenium.webdriver.remote',
+    'selenium.webdriver',
+    'selenium',
+
+    # markdown
+    'MARKDOWN',
+    'build_extension'
+]
+
+# 关闭日志打印
+for STOP_LOG in STOP_LOGS:
+    logging.getLogger(STOP_LOG).setLevel(logging.WARNING)
 
 # print(logging.Logger.manager.loggerDict) # 取使用debug模块的name
 

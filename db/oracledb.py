@@ -69,10 +69,22 @@ class OracleDB(Singleton):
         if fetch_one:
             result =  self.cursor.execute(sql).fetchone()
         else:
-            result =  self.cursor.execute(sql).fetchall()
+            # result =  self.cursor.execute(sql).fetchall()
+            self.cursor.execute(sql)
+            # 处理clob和date字段
+            def fix_lob(row):
+                def convert(col):
+                    if isinstance(col, cx_Oracle.LOB) or isinstance(col, datetime.datetime):
+                        return str(col)
+                    else:
+                        return col
 
-        result = self.__cover_clob_to_str(result)
+                return [convert(c) for c in row]
+
+            result =  [fix_lob(r) for r in self.cursor]
+
         if to_json:
+            # result = self.__cover_clob_to_str(result)
             columns = [i[0] for i in self.cursor.description]
             # print(','.join(columns))
             result = [dict(zip(columns, r)) for r in result]
@@ -135,6 +147,23 @@ class OracleDB(Singleton):
         else:
             log.debug('%s表创建唯一索引成功 索引为 %s'%(table, key))
 
+    def set_primary_key(self, table, key = "ID"):
+        if STOP_ORCL:
+            return
+
+        try:
+            sql = 'alter table {table_name} add constraint pk_{key} primary key ({key})'.format(table_name = table, key = key)
+            print(sql)
+            self.cursor.execute(sql)
+            self.conn.commit()
+
+        except Exception as e:
+            log.error(table + ' ' + str(e) + ' key = '+ key)
+        else:
+            log.debug('%s表创建主键成功 主键为 %s'%(table, key))
+
+
+
     def close(self):
         if STOP_ORCL:
             return
@@ -143,23 +172,4 @@ class OracleDB(Singleton):
         self.conn.close()
 
 if __name__ == '__main__':
-    # 多线程测试
-    # import threading
-
     db = OracleDB()
-    # sql = 'select count(*) from v$process'
-
-    # result = threading.Thread(target = db.find, args = (sql,)).start()
-    # print(result)
-
-    # result = threading.Thread(target = db.find, args = ('select * from tab_mvms_violation_knowledge',)).start()
-    # print(result)
-
-    # result = threading.Thread(target = db.find, args = (sql,)).start()
-    # print(result)
-    # db.find("select ID,TITLE,to_char(CONTENT) as CONTENT,URL,WEBSITE_NAME,IMAGE_URL,to_char(RELEASE_TIME, 'yyyy-mm-dd hh24:mi:ss') as RELEASE_TIME,to_char(RECORD_TIME, 'yyyy-mm-dd hh24:mi:ss') as RECORD_TIME,CLUES_IDS,KEYWORDS,EMOTION,REVIEW_COUNT,ACCOUNT,UUID,COMMENT_COUNT,AUTHOR,INFO_TYPE,UP_COUNT,KEYWORDS_COUNT,HOST,HOT_ID,MAY_INVALID,KEYWORD_CLUES_ID,WEIGHT,IS_VIP from TAB_IOPM_ARTICLE_INFO t where rownum <= 5", to_json = True)
-
-
-    sql = "select * from TAB_IOPM_ARTICLE_INFO"
-    result = db.find(sql, to_json = True)
-    print(result)

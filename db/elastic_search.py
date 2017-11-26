@@ -14,6 +14,8 @@ import utils.tools as tools
 from elasticsearch import Elasticsearch
 from utils.log import log
 
+ADDRESS = tools.get_conf_value('config.conf', 'elasticsearch', 'address')
+
 class Singleton(object):
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls,'_inst'):
@@ -22,11 +24,11 @@ class Singleton(object):
         return cls._inst
 
 class ES(Singleton):
-    def __init__(self, ip = '127.0.0.1', port = 9200):
+    def __init__(self, address = ADDRESS):
         super(ES, self).__init__()
         if not hasattr(self,'_es'):
             try:
-                self._es = Elasticsearch([{'host':ip,'port':port}])
+                self._es = Elasticsearch(address.split(','))
             except Exception as e:
                 raise
             else:
@@ -75,7 +77,7 @@ class ES(Singleton):
             return datas
 
 
-    def search(self, table, body):
+    def search(self, table, body = {}):
         '''
         @summary:
         ---------
@@ -97,11 +99,58 @@ class ES(Singleton):
         else:
             return datas
 
+    def update_by_id(self, table, data_id, data, doc_type = ''):
+        '''
+        @summary:
+        ---------
+        @param table:
+        @param data_id:
+        @param data: {"TITLE":"xxx"} 更新的字段及值
+        @param doc_type:
+        ---------
+        @result:
+        '''
+
+
+        self._es.update(index = table, doc_type = doc_type or table, body = {"doc": data}, id = data_id)
+
+    def delete_by_id(self, table, data_id, doc_type = ''):
+        """
+        根据给定的id,删除文档
+        :return:
+        """
+        self._es.delete(index = table, doc_type = doc_type or table, id = data_id)
+
+    def set_mapping(self, table, mapping, doc_type):
+        '''
+        @summary:
+        ---------
+        @param table:
+        @param mapping:
+        mapping = {
+            self.doc_type: {
+                "properties": {
+                    "document_id": {
+                        "type": "integer"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+        @param doc_type:
+        ---------
+        @result:
+        '''
+
+        if not self._es.indices.exists(index = table):
+            # 创建Index和mapping
+            self._es.indices.create(index = table, body = mapping, ignore=400)
+            self._es.indices.put_mapping(index = table, doc_type = doc_type or table, body = mapping)
+
 if __name__ == '__main__':
     es = ES()
-    # es.add('test', {'dong':'傻'})
-    # datas = es.get('tab_iopm_article_info', 14488)
-    # print(datas)
-
-    datas = es.search('tab_iopm_article_info', {"query":{"match_all":{}}})
-    print(datas)

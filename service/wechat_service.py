@@ -14,6 +14,7 @@ import collections
 from utils.log import log
 import utils.tools as tools
 from db.oracledb import OracleDB
+from db.elastic_search import ES
 
 SIZE = 100
 
@@ -25,6 +26,7 @@ class WechatService():
 
     def __init__(self):
         self._db = OracleDB()
+        self._es = ES()
         self.load_todo_account()
 
     def load_todo_account(self):
@@ -75,6 +77,8 @@ class WechatService():
         log.debug('''
             -----文章信息-----
             %s'''%tools.dumps_json(article_info))
+
+        self._es.add('wechat_article', article_info, article_info.get('article_id'))
 
 if __name__ == '__main__':
     # wechat = WechatService()
