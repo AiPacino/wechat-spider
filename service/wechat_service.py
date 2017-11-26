@@ -27,9 +27,9 @@ class WechatService():
     def __init__(self):
         self._db = OracleDB()
         self._es = ES()
-        self.load_todo_account()
+        self.__load_todo_account()
 
-    def load_todo_account(self):
+    def __load_todo_account(self):
         if not WechatService._todo_accounts:
             sql = '''
                 select *
@@ -43,7 +43,7 @@ class WechatService():
             if not results:
                 WechatService._is_done = True
                 WechatService._rownum = 1
-                self.load_todo_account()
+                self.__load_todo_account()
             else:
                 WechatService. _todo_accounts = collections.deque(results) #  转为队列
                 WechatService._rownum += SIZE
@@ -56,7 +56,7 @@ class WechatService():
         @result: 返回biz, 是否已做完一圈 (biz, True)
         '''
         if not WechatService._todo_accounts:
-            self.load_todo_account()
+            self.__load_todo_account()
 
         next_account = WechatService._todo_accounts.popleft()[2], WechatService._is_done
         # 重置_is_done 状态
@@ -79,6 +79,11 @@ class WechatService():
             %s'''%tools.dumps_json(article_info))
 
         self._es.add('wechat_article', article_info, article_info.get('article_id'))
+
+    def add_account_info(self, account_info):
+        log.debug('''
+            -----公众号信息-----
+            %s'''%tools.dumps_json(account_info))
 
 if __name__ == '__main__':
     # wechat = WechatService()
