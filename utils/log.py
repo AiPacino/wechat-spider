@@ -100,6 +100,7 @@ STOP_LOGS = [
     'urllib3.connectionpool',
     'requests.packages.urllib3.connection',
     'elasticsearch',
+    'log_request_fail',
 
     # requests
     'requests',
@@ -115,7 +116,7 @@ STOP_LOGS = [
 
 # 关闭日志打印
 for STOP_LOG in STOP_LOGS:
-    logging.getLogger(STOP_LOG).setLevel(logging.WARNING)
+    logging.getLogger(STOP_LOG).setLevel(logging.ERROR)
 
 # print(logging.Logger.manager.loggerDict) # 取使用debug模块的name
 

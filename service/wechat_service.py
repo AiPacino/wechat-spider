@@ -64,6 +64,12 @@ class WechatService():
 
         return next_account
 
+    def is_exist(self, table, data_id):
+        if self._es.get(table, data_id = data_id, doc_type = table):
+            return True
+        else:
+            return False
+
     def add_article_info(self, article_info):
         '''
         @summary:
@@ -84,6 +90,8 @@ class WechatService():
         log.debug('''
             -----公众号信息-----
             %s'''%tools.dumps_json(account_info))
+
+        self._es.add('wechat_account', account_info, account_info.get('__biz'))
 
 if __name__ == '__main__':
     # wechat = WechatService()
