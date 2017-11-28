@@ -122,14 +122,14 @@ class ES(Singleton):
         """
         self._es.delete(index = table, doc_type = doc_type or table, id = data_id)
 
-    def set_mapping(self, table, mapping, doc_type):
+    def set_mapping(self, table, mapping, doc_type = ''):
         '''
         @summary:
         ---------
         @param table:
         @param mapping:
         mapping = {
-            self.doc_type: {
+            doc_type: {
                 "properties": {
                     "document_id": {
                         "type": "integer"
