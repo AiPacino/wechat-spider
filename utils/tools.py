@@ -141,7 +141,7 @@ def get_html_by_webdirver(url, proxies = ''):
         log.error(e)
     return html and len(html) < 1024 * 1024 and html or None
 
-@log_function_time
+# @log_function_time
 def get_html_by_requests(url, headers = '', code = 'utf-8', data = None, proxies = {}):
     html = None
     if not url.endswith('.exe') and not url.endswith('.EXE'):
@@ -467,31 +467,31 @@ def capture(url, save_fn="capture.png"):
     browser = webdriver.PhantomJS()
     browser.set_window_size(1200, 900)
     browser.get(url) # Load page
-    browser.execute_script("""
-            (function () {
-              var y = 0;
-              var step = 100;
-              window.scroll(0, 0);
+    # browser.execute_script("""
+    #         (function () {
+    #           var y = 0;
+    #           var step = 100;
+    #           window.scroll(0, 0);
 
-              function f() {
-                if (y < document.body.scroll_height) {
-                  y += step;
-                  window.scroll(0, y);
-                  set_timeout(f, 50);
-                } else {
-                  window.scroll(0, 0);
-                  document.title += "scroll-done";
-                }
-              }
+    #           function f() {
+    #             if (y < document.body.scroll_height) {
+    #               y += step;
+    #               window.scroll(0, y);
+    #               set_timeout(f, 50);
+    #             } else {
+    #               window.scroll(0, 0);
+    #               document.title += "scroll-done";
+    #             }
+    #           }
 
-              set_timeout(f, 1000);
-            })();
-        """)
+    #           set_timeout(f, 1000);
+    #         })();
+    #     """)
 
-    for i in range(30):
-        if "scroll-done" in browser.title:
-            break
-        time.sleep(1)
+    # for i in range(30):
+    #     if "scroll-done" in browser.title:
+    #         break
+    #     time.sleep(1)
 
     browser.save_screenshot(save_fn)
     browser.close()
