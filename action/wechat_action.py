@@ -32,6 +32,10 @@ class WechatAction():
         }
     }
 
+    _account_info = { # 用来缓存__biz 和 account_id的对应信息
+        # '__biz' : 'account_id'
+    }
+
 
     def __init__(self):
         self._wechat_service = WechatService()
@@ -53,7 +57,9 @@ class WechatAction():
             url = WechatAction._todo_urls.popleft()
         else:
             # 跳转到下一个公众号
-            __biz, is_done = self._wechat_service.get_next_account()
+            account_id, __biz, is_done = self._wechat_service.get_next_account()
+            WechatAction._account_info[__biz] = account_id or ''
+
             url = 'http://mp.weixin.qq.com/mp/getmasssendmsg?__biz=%s#wechat_webview_type=1&wechat_redirect'%__biz
             log.debug('''
                 下一个公众号 ： %s
@@ -103,7 +109,7 @@ class WechatAction():
             'summary' : summary,
             'qr_code' : qr_code,
             'verify' : verify,
-            'account_id' : '',
+            'account_id' : WechatAction._account_info.pop(__biz),
             'record_time' : tools.get_current_date()
         }
 

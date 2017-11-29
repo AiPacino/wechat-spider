@@ -46,7 +46,7 @@ class WechatSogou():
             elif not account_info.get('check_info'):
                 log.debug('查无此公众号 ：%s'% account)
 
-            tools.delay_time(5)
+            tools.delay_time(60)
 
 
 
@@ -64,7 +64,7 @@ class WechatSogou():
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
             "Accept-Language": "zh-CN,zh;q=0.8",
             "Accept-Encoding": "gzip, deflate",
-            "Cookie": "IPLOC=CN1100; ld=4yllllllll2zj$kYlllllVo3$xklllllWT89eyllll9lllllRklll5@@@@@@@@@@; SUV=00E3555B7B7CC4C55A0AA8195254D871; CXID=150E3ABE3C35F9E55217835F7720E719; ABTEST=8|1510801558|v1; LSTMV=418%2C28; LCLKINT=2070; ad=8kllllllll2zRlPflllllVoSynYlllllWT89eyllllwlllll9Cxlw@@@@@@@@@@@; SUID=C5C47C7B1508990A000000005A0AA818; weixinIndexVisited=1; JSESSIONID=aaa-1KvS1lhung8pB9v8v; sct=20; PHPSESSID=k3c9psast34njs32vjm3pas3l1; SUIR=E8E851562D28732A6B711C802DECBC6F; SNUID=5657EFE99397CD9A1140DD249397E84D",
+            "Cookie": "IPLOC=CN1100; ld=4yllllllll2zj$kYlllllVo3$xklllllWT89eyllll9lllllRklll5@@@@@@@@@@; SUV=00E3555B7B7CC4C55A0AA8195254D871; CXID=150E3ABE3C35F9E55217835F7720E719; ABTEST=8|1510801558|v1; LSTMV=418%2C28; LCLKINT=2070; ad=8kllllllll2zRlPflllllVoSynYlllllWT89eyllllwlllll9Cxlw@@@@@@@@@@@; SUID=C5C47C7B1508990A000000005A0AA818; weixinIndexVisited=1; JSESSIONID=aaa-1KvS1lhung8pB9v8v; sct=20; PHPSESSID=k3c9psast34njs32vjm3pas3l1; SUIR=E8E851562D28732A6B711C802DECBC6F; seccodeErrorCount=1|Tue, 28 Nov 2017 11:11:05 GMT; SNUID=A1A0181864613C6A610582E26446EC9A; successCount=1|Tue, 28 Nov 2017 11:11:22 GMT",
             "Host": "weixin.sogou.com"
         }
 

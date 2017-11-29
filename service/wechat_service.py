@@ -33,10 +33,10 @@ class WechatService():
         if not WechatService._todo_accounts:
             sql = '''
                 select *
-                  from (select rownum r, t.id, t.biz
-                          from TAB_WECHAT_ACCOUNT t
-                         where rownum < {size})
-                 where r >= {rownum}
+                   from (select rownum r, t.id, t.domain, t.biz
+                           from TAB_IOPM_SITE t
+                          where t.biz is not null and rownum < {size})
+                  where r >= {rownum}
                 '''.format(rownum = WechatService._rownum, size = WechatService._rownum + SIZE)
 
             results = self._db.find(sql)
@@ -58,7 +58,11 @@ class WechatService():
         if not WechatService._todo_accounts:
             self.__load_todo_account()
 
-        next_account = WechatService._todo_accounts.popleft()[2], WechatService._is_done
+        next_account_info =  WechatService._todo_accounts.popleft()
+        next_account_id = next_account_info[2]
+        next_account_biz = next_account_info[3]
+
+        next_account = next_account_id, next_account_biz, WechatService._is_done
         # 重置_is_done 状态
         WechatService._is_done =  False
 
