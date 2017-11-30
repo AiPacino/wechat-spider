@@ -40,6 +40,8 @@ class WechatAction():
     def __init__(self):
         self._wechat_service = WechatService()
 
+        self._is_need_get_more = True # 是否需要获取更多文章。 当库中该条文章存在时，不需要获取更早的文章，默认库中已存在。如今天的文章库中已经存在了，如果爬虫一直在工作，说明昨天的文章也已经入库，增量试
+
     def __open_next_page(self):
         '''
         @summary: 跳转到历史文章
@@ -167,7 +169,6 @@ class WechatAction():
         @result:
         '''
         log.debug(tools.dumps_json(article_list))
-        is_need_get_more = True # 是否需要获取更多文章。 当库中该条文章存在时，不需要获取更早的文章，默认库中已存在。如今天的文章库中已经存在了，如果爬虫一直在工作，说明昨天的文章也已经入库，增量试
 
         # 解析json内容里文章信息
         def parse_article_info(article_info, release_time):
@@ -188,7 +189,7 @@ class WechatAction():
 
                 # 判断该文章库中是否已存在
                 if self._wechat_service.is_exist('wechat_article', article_id):
-                    is_need_get_more = False
+                    self._is_need_get_more  = False
                     return # 不往下进行 舍弃之后的文章
 
                 __biz = tools.get_param(url, '__biz') # 用于关联公众号
@@ -232,7 +233,7 @@ class WechatAction():
             app_msg_ext_info = article.get('app_msg_ext_info', {})
             parse_article_info(app_msg_ext_info, release_time)
 
-            if not is_need_get_more:
+            if not self._is_need_get_more:
                 break
 
             # 同一天附带的图文消息
@@ -240,7 +241,7 @@ class WechatAction():
             for multi_app_msg_item in multi_app_msg_item_list:
                 parse_article_info(multi_app_msg_item, release_time)
 
-                if not is_need_get_more:
+                if not self._is_need_get_more:
                     break
 
     def get_article_list(self, data, req_url):
@@ -277,7 +278,7 @@ class WechatAction():
                 can_msg_continue = tools.get_info(data, regex, fetch_one = True)
                 if can_msg_continue == '0':# 无更多文章
                     pass
-                else:
+                elif self._is_need_get_more:
                     # 以下是拼接下拉显示更多的历史文章 跳转
                     # 取appmsg_token 在html中
                     regex = 'appmsg_token = "(.*?)";'
@@ -299,7 +300,7 @@ class WechatAction():
                 can_msg_continue = data.get('can_msg_continue')
                 if not can_msg_continue: # 无更多文章
                     pass
-                else:
+                elif self._is_need_get_more:
                     # 以下是拼接下拉显示更多的历史文章 跳转
                     # 取参数  在url中
                     __biz = tools.get_param(req_url, '__biz')
