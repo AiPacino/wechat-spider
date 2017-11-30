@@ -62,7 +62,8 @@ class WechatAction():
             account_id, __biz, is_done = self._wechat_service.get_next_account()
             WechatAction._account_info[__biz] = account_id or ''
 
-            url = 'http://mp.weixin.qq.com/mp/getmasssendmsg?__biz=%s#wechat_webview_type=1&wechat_redirect'%__biz
+            # url = 'http://mp.weixin.qq.com/mp/getmasssendmsg?__biz=%s#wechat_webview_type=1&wechat_redirect'%__biz
+            url = 'https://mp.weixin.qq.com/mp/profile_ext?action=home&__biz=%s&scene=124#wechat_redirect'%__biz
             log.debug('''
                 下一个公众号 ： %s
                 '''%url)
@@ -259,62 +260,64 @@ class WechatAction():
         ---------
         @result:
         '''
+        try:
+            # 判断是否为被封的账号， 被封账号没有文章列表
+            if 'list' in data:
+                # 取html格式里的文章列表
+                if 'action=home' in req_url:
+                    # 解析公众号信息
+                    self.__parse_account_info(data, req_url)
 
-        # 判断是否为被封的账号， 被封账号没有文章列表
-        if 'list' in data:
-            # 取html格式里的文章列表
-            if 'action=home' in req_url:
-                # 解析公众号信息
-                self.__parse_account_info(data, req_url)
+                    # 解析文章列表
+                    regex = "msgList = '(.*?})';"
+                    article_list = tools.get_info(data, regex, fetch_one = True)
+                    article_list = article_list.replace('&quot;', '"')
+                    self.__parse_article_list(article_list)
 
-                # 解析文章列表
-                regex = "msgList = '(.*?})';"
-                article_list = tools.get_info(data, regex, fetch_one = True)
-                article_list = article_list.replace('&quot;', '"')
-                self.__parse_article_list(article_list)
+                    #判断是否还有更多文章 没有跳转到下个公众号，有则下拉显示更多
+                    regex = "can_msg_continue = '(\d)'"
+                    can_msg_continue = tools.get_info(data, regex, fetch_one = True)
+                    if can_msg_continue == '0':# 无更多文章
+                        pass
+                    elif self._is_need_get_more:
+                        # 以下是拼接下拉显示更多的历史文章 跳转
+                        # 取appmsg_token 在html中
+                        regex = 'appmsg_token = "(.*?)";'
+                        appmsg_token = tools.get_info(data, regex, fetch_one = True)
 
-                #判断是否还有更多文章 没有跳转到下个公众号，有则下拉显示更多
-                regex = "can_msg_continue = '(\d)'"
-                can_msg_continue = tools.get_info(data, regex, fetch_one = True)
-                if can_msg_continue == '0':# 无更多文章
-                    pass
-                elif self._is_need_get_more:
-                    # 以下是拼接下拉显示更多的历史文章 跳转
-                    # 取appmsg_token 在html中
-                    regex = 'appmsg_token = "(.*?)";'
-                    appmsg_token = tools.get_info(data, regex, fetch_one = True)
+                        # 取其他参数  在url中
+                        __biz = tools.get_param(req_url, '__biz')
+                        pass_ticket = tools.get_param(req_url, 'pass_ticket')
 
-                    # 取其他参数  在url中
-                    __biz = tools.get_param(req_url, '__biz')
-                    pass_ticket = tools.get_param(req_url, 'pass_ticket')
+                        next_page_url = 'https://mp.weixin.qq.com/mp/profile_ext?action=getmsg&__biz={__biz}&f=json&offset={offset}&count=10&is_ok=1&scene=124&uin=777&key=777&pass_ticket={pass_ticket}&wxtoken=&appmsg_token={appmsg_token}&x5=0&f=json'.format(__biz = __biz, offset = 10, pass_ticket = pass_ticket, appmsg_token = appmsg_token)
+                        WechatAction._todo_urls.append(next_page_url)
 
-                    next_page_url = 'https://mp.weixin.qq.com/mp/profile_ext?action=getmsg&__biz={__biz}&f=json&offset={offset}&count=10&is_ok=1&scene=124&uin=777&key=777&pass_ticket={pass_ticket}&wxtoken=&appmsg_token={appmsg_token}&x5=0&f=json'.format(__biz = __biz, offset = 10, pass_ticket = pass_ticket, appmsg_token = appmsg_token)
-                    WechatAction._todo_urls.append(next_page_url)
+                else:# json格式
+                    data = tools.get_json(data)
+                    article_list = data.get('general_msg_list', {})
+                    self.__parse_article_list(article_list)
 
-            else:# json格式
-                data = tools.get_json(data)
-                article_list = data.get('general_msg_list', {})
-                self.__parse_article_list(article_list)
+                    #判断是否还有更多文章 没有跳转到下个公众号，有则下拉显示更多
+                    can_msg_continue = data.get('can_msg_continue')
+                    if not can_msg_continue: # 无更多文章
+                        pass
+                    elif self._is_need_get_more:
+                        # 以下是拼接下拉显示更多的历史文章 跳转
+                        # 取参数  在url中
+                        __biz = tools.get_param(req_url, '__biz')
+                        pass_ticket = tools.get_param(req_url, 'pass_ticket')
+                        appmsg_token = tools.get_param(req_url, 'appmsg_token')
 
-                #判断是否还有更多文章 没有跳转到下个公众号，有则下拉显示更多
-                can_msg_continue = data.get('can_msg_continue')
-                if not can_msg_continue: # 无更多文章
-                    pass
-                elif self._is_need_get_more:
-                    # 以下是拼接下拉显示更多的历史文章 跳转
-                    # 取参数  在url中
-                    __biz = tools.get_param(req_url, '__biz')
-                    pass_ticket = tools.get_param(req_url, 'pass_ticket')
-                    appmsg_token = tools.get_param(req_url, 'appmsg_token')
+                        # 取offset 在json中
+                        offset = data.get('next_offset', 0)
 
-                    # 取offset 在json中
-                    offset = data.get('next_offset', 0)
+                        next_page_url = 'https://mp.weixin.qq.com/mp/profile_ext?action=getmsg&__biz={__biz}&f=json&offset={offset}&count=10&is_ok=1&scene=124&uin=777&key=777&pass_ticket={pass_ticket}&wxtoken=&appmsg_token={appmsg_token}&x5=0&f=json'.format(__biz = __biz, offset = offset, pass_ticket = pass_ticket, appmsg_token = appmsg_token)
+                        WechatAction._todo_urls.append(next_page_url)
 
-                    next_page_url = 'https://mp.weixin.qq.com/mp/profile_ext?action=getmsg&__biz={__biz}&f=json&offset={offset}&count=10&is_ok=1&scene=124&uin=777&key=777&pass_ticket={pass_ticket}&wxtoken=&appmsg_token={appmsg_token}&x5=0&f=json'.format(__biz = __biz, offset = offset, pass_ticket = pass_ticket, appmsg_token = appmsg_token)
-                    WechatAction._todo_urls.append(next_page_url)
-
-        else: # 该__biz 账号已被封
-            pass
+            else: # 该__biz 账号已被封
+                pass
+        except Exception as e:
+            log.error(e)
 
         return self.__open_next_page()
 
