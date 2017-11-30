@@ -109,7 +109,7 @@ class WechatAction():
             'summary' : summary,
             'qr_code' : qr_code,
             'verify' : verify,
-            'account_id' : WechatAction._account_info.pop(__biz),
+            'account_id' : WechatAction._account_info.pop(__biz) if __biz in WechatAction._account_info.keys() else '',
             'record_time' : tools.get_current_date()
         }
 
@@ -182,8 +182,8 @@ class WechatAction():
             cover = article_info.get('cover').replace('\\', '')
             author = article_info.get('author')
             if url: # 被发布者删除的文章 无url和其他信息， 此时取不到mid 且不用入库
-                mid = tools.get_param(url, 'mid') # 图文消息id 同一天发布的图文消息 id一样
-                idx = tools.get_param(url, 'idx') # 第几条图文消息 从1开始
+                mid = tools.get_param(url, 'mid') or tools.get_param(url, 'appmsgid') # 图文消息id 同一天发布的图文消息 id一样
+                idx = tools.get_param(url, 'idx') or tools.get_param(url, 'itemidx')# 第几条图文消息 从1开始
                 article_id = mid + idx # 用mid和idx 拼接 确定唯一一篇文章 如mid = 2650492260  idx = 1，则article_id = 26504922601
 
                 # 判断该文章库中是否已存在
@@ -322,8 +322,8 @@ class WechatAction():
 
         if data: # 被验证不详实的文章 首次不反回内容，跳转到https://mp.weixin.qq.com/mp/rumor
             req_url = req_url.replace('amp;', '')
-            mid = tools.get_param(req_url, 'mid') # 图文消息id 同一天发布的图文消息 id一样
-            idx = tools.get_param(req_url, 'idx') # 第几条图文消息 从1开始
+            mid = tools.get_param(req_url, 'mid') or tools.get_param(req_url, 'appmsgid') # 图文消息id 同一天发布的图文消息 id一样
+            idx = tools.get_param(req_url, 'idx') or tools.get_param(req_url, 'itemidx') # 第几条图文消息 从1开始
             article_id = mid + idx # 用mid和idx 拼接 确定唯一一篇文章 如mid = 2650492260  idx = 1，则article_id = 26504922601
 
             regex = '(<div class="rich_media_content " id="js_content">.*?)<script nonce'
@@ -391,9 +391,10 @@ class WechatAction():
         @result:
         '''
 
-        log.debug('获取观看和评论量')
+        log.debug('获取观看和点赞量')
 
         req_url = req_url.replace('amp;', '')
+
         mid = tools.get_param(req_url, 'mid') # 图文消息id 同一天发布的图文消息 id一样
         idx = tools.get_param(req_url, 'idx') # 第几条图文消息 从1开始
         article_id = mid + idx # 用mid和idx 拼接 确定唯一一篇文章 如mid = 2650492260  idx = 1，则article_id = 26504922601
