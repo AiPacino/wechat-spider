@@ -15,9 +15,12 @@ from utils.log import log
 import utils.tools as tools
 import web
 import json
+import random
 from service.wechat_service import WechatService
 
-SLEEP_TIME = 10000 # 每个历史列表、文章详情时间间隔  毫秒
+
+MIN_SLEEP_TIME = 10000 # 每个历史列表、文章详情时间间隔  毫秒
+MAX_SLEEP_TIME = 15000
 WAIT_TIME = 1000 * 60 * 60 # 做完所有公众号后休息的时间，然后做下一轮
 # WAIT_TIME = 25000
 
@@ -41,6 +44,9 @@ class WechatAction():
         self._wechat_service = WechatService()
 
         self._is_need_get_more = True # 是否需要获取更多文章。 当库中该条文章存在时，不需要获取更早的文章，默认库中已存在。如今天的文章库中已经存在了，如果爬虫一直在工作，说明昨天的文章也已经入库，增量试
+
+    def get_sleep_time(self):
+        return random.randint(MIN_SLEEP_TIME, MAX_SLEEP_TIME)
 
     def __open_next_page(self):
         '''
@@ -73,7 +79,7 @@ class WechatAction():
             '''%(url, is_done))
 
         # 注入js脚本实现自动跳转
-        next_page = "<script>setTimeout(function(){window.location.href='%s';},%d);</script>"%(url, SLEEP_TIME if not is_done else WAIT_TIME)
+        next_page = "<script>setTimeout(function(){window.location.href='%s';},%d);</script>"%(url, self.get_sleep_time() if not is_done else WAIT_TIME)
         return next_page
 
     def __parse_account_info(self, data, req_url):
@@ -475,4 +481,6 @@ class WechatAction():
 
 
 if __name__ == '__main__':
-    pass
+    wechat_action = WechatAction()
+    sleep_time = wechat_action.get_sleep_time()
+    print(sleep_time)
