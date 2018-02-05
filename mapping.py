@@ -123,5 +123,5 @@ class WecahtMapping():
 
 if __name__ == '__main__':
     wechat_mapping = WecahtMapping()
-    # wechat_mapping.set_account_mapping()
+    wechat_mapping.set_account_mapping()
     wechat_mapping.set_article_mapping()
