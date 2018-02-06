@@ -699,6 +699,12 @@ def get_current_date(date_format = '%Y-%m-%d %H:%M:%S'):
     return datetime.datetime.now().strftime(date_format)
     # return time.strftime(date_format, time.localtime(time.time()))
 
+def get_tomorrow():
+    today = datetime.date.today()
+    tomorrow = today + datetime.timedelta(days=1)
+
+    return str(tomorrow)
+
 def format_date(date, old_format = '', new_format = '%Y-%m-%d %H:%M:%S'):
     '''
     @summary: 格式化日期格式
@@ -743,6 +749,20 @@ def delay_time(sleep_time = 160):
     '''
 
     time.sleep(sleep_time)
+
+def seconds_to_h_m_s(seconds):
+    '''
+    @summary: 将秒转为时分秒
+    ---------
+    @param seconds:
+    ---------
+    @result: 08:23:00
+    '''
+
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+
+    return '%02d:%02d:%02d'%(h, m, s)
 
 ################################################
 def get_md5(source_str):

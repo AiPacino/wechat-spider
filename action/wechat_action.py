@@ -3,6 +3,16 @@
 Created on 2017-09-22 15:55
 ---------
 @summary:
+防封策略
+1、爬取公众号文章之前，先采用搜狗微信验证下是否有新发布的文章。有新发布的，转到微信客户端爬取。若没有，则继续检测下一个公众号。若出现验证码，则搜狗微信停用一天，间隔24小时后再试。
+2、若搜狗微信不可用，采用微信公众平台检测是否有新发布的文章，流程如1
+3、为防止搜狗微信和微信公众平台使用频率太高，此处有1/3的几率不使用，直接使用微信客户端爬取
+4、爬取到今日文章的公众号今日不再爬取
+5、所有公众号当日发布的文章均已爬到，爬虫停止工作，次日8点再次启动
+
+问题：
+1、微信公众平台接口需要tooken参数，需要用户名密码，然后管理员扫码授权才能登陆获取。否则tooken的有效期只有一天，过期接口不可用。
+2、搜狗微信不能使用太频繁，否者出现验证码。此处间歇15秒
 ---------
 @author: Boris
 '''
@@ -21,10 +31,14 @@ from service.wechat_service import WechatService
 
 MIN_SLEEP_TIME = 10000 # 每个历史列表、文章详情时间间隔  毫秒
 MAX_SLEEP_TIME = 15000
-WAIT_TIME = 1000 * 60 * 60 # 做完所有公众号后休息的时间，然后做下一轮
-# WAIT_TIME = 25000
+MIN_WAIT_TIME = 1000 * 60 * 60 # 做完所有公众号后休息的时间，然后做下一轮
+MAX_WAIT_TIME = 1000 * 60 * 60 * 2
+
+ONLY_TODAY_MSG = int(tools.get_conf_value('config.conf', 'spider', 'only_today_msg'))
+SPIDER_START_TIME = tools.get_conf_value('config.conf', 'spider', 'spider_start_time')
 
 class WechatAction():
+    _wechat_service = WechatService()
     _todo_urls = collections.deque() # 待做的url
 
     _article_info = { # 缓存文章信息，第一次缓存列表信息、第二次缓存观看量点赞量，第三次直到评论信息也取到后，则入库
@@ -39,14 +53,67 @@ class WechatAction():
         # '__biz' : 'account_id'
     }
 
+    _current_account_biz = ''
 
     def __init__(self):
-        self._wechat_service = WechatService()
-
         self._is_need_get_more = True # 是否需要获取更多文章。 当库中该条文章存在时，不需要获取更早的文章，默认库中已存在。如今天的文章库中已经存在了，如果爬虫一直在工作，说明昨天的文章也已经入库，增量试
 
     def get_sleep_time(self):
+        '''
+        @summary: 每个历史文章的间隔时间
+        ---------
+        ---------
+        @result:
+        '''
+
         return random.randint(MIN_SLEEP_TIME, MAX_SLEEP_TIME)
+
+    def get_wait_time(self):
+        '''
+        @summary: 每批公众号 扫描完一轮的间隔时间
+        ---------
+        ---------
+        @result:
+        '''
+
+        return random.randint(MIN_WAIT_TIME, MAX_WAIT_TIME)
+
+    def get_next_day_time_interval(self):
+        '''
+        @summary: 获取爬虫次日开始爬取的时间
+        当日公众号新发布的文章均已爬取，则次日9:00开始爬取
+        ---------
+        ---------
+        @result:
+        '''
+        tomorrow = tools.get_tomorrow() + ' ' + SPIDER_START_TIME
+        current_timestamp = tools.get_current_timestamp()
+        tomorrow_timestamp = tools.date_to_timestamp(tomorrow)
+
+        next_day_time_interval = tomorrow_timestamp - current_timestamp # 秒
+        # 转换为毫秒
+        next_day_time_interval *= 1000
+
+        return next_day_time_interval
+
+    def get_spider_start_time_interval(self):
+        '''
+        @summary: 获取爬虫开始爬取的时间
+        当日爬取时间小于9:00 则9点后爬取
+        ---------
+        ---------
+        @result:
+        '''
+
+        spider_start_time = tools.get_current_date("%Y-%m-%d") + ' ' + SPIDER_START_TIME
+        current_timestamp = tools.get_current_timestamp()
+        spider_start_timestamp = tools.date_to_timestamp(spider_start_time)
+
+        spider_start_time_interval = spider_start_timestamp - current_timestamp # 秒
+        # 转换为毫秒
+        spider_start_time_interval *= 1000
+
+        return spider_start_time_interval
 
     def __open_next_page(self):
         '''
@@ -60,26 +127,44 @@ class WechatAction():
         @result:
         '''
         is_done = False # 是否做完一轮
+        is_all_done = False # 是否全部做完（所有公众号当日的发布的信息均已采集）
 
         if WechatAction._todo_urls:
             url = WechatAction._todo_urls.popleft()
         else:
+            # 做完一个公众号 更新其文章数
+            WechatAction._wechat_service.update_account_article_num(WechatAction._current_account_biz)
+
             # 跳转到下一个公众号
-            account_id, __biz, is_done = self._wechat_service.get_next_account()
+            account_id, __biz, is_done, is_all_done = WechatAction._wechat_service.get_next_account()
             WechatAction._account_info[__biz] = account_id or ''
+
 
             # url = 'http://mp.weixin.qq.com/mp/getmasssendmsg?__biz=%s#wechat_webview_type=1&wechat_redirect'%__biz
             url = 'https://mp.weixin.qq.com/mp/profile_ext?action=home&__biz=%s&scene=124#wechat_redirect'%__biz
             log.debug('''
                 下一个公众号 ： %s
                 '''%url)
+
+        # 注入js脚本实现自动跳转
+        if is_all_done: # 当天文章均已爬取 下一天再爬
+            # 睡眠到下一天
+            sleep_time = self.get_next_day_time_interval()
+        elif is_done: # 做完一轮 休息
+            sleep_time = self.get_wait_time()
+        elif ONLY_TODAY_MSG and tools.get_current_date() < tools.get_current_date("%Y-%m-%d") + ' ' + SPIDER_START_TIME: # 只爬取今日文章且当前时间小于指定的开始时间，则休息不爬取，因为公众号下半夜很少发布文章
+            sleep_time = self.get_spider_start_time_interval()
+        else: # 做完一篇文章 间隔一段时间
+            sleep_time = self.get_sleep_time()
+
         log.debug('''
             next_page_url : %s
             is_done:        %s
-            '''%(url, is_done))
-
-        # 注入js脚本实现自动跳转
-        next_page = "<script>setTimeout(function(){window.location.href='%s';},%d);</script>"%(url, self.get_sleep_time() if not is_done else WAIT_TIME)
+            is_all_done:    %s
+            sleep_time:     %s
+            next_start_time %s
+            '''%(url, is_done, is_all_done, tools.seconds_to_h_m_s(sleep_time / 1000), tools.timestamp_to_date(tools.get_current_timestamp() + sleep_time / 1000)))
+        next_page = "<script>setTimeout(function(){window.location.href='%s';},%d);</script>"%(url, sleep_time)
         return next_page
 
     def __parse_account_info(self, data, req_url):
@@ -91,6 +176,7 @@ class WechatAction():
         @result:
         '''
         __biz = tools.get_param(req_url, '__biz')
+        WechatAction._current_account_biz = __biz
 
         regex = 'id="nickname">(.*?)</strong>'
         account = tools.get_info(data, regex, fetch_one = True).strip()
@@ -122,8 +208,8 @@ class WechatAction():
             'record_time' : tools.get_current_date()
         }
 
-        if not self._wechat_service.is_exist('wechat_account', __biz):
-            self._wechat_service.add_account_info(account_info)
+        if not WechatAction._wechat_service.is_exist('wechat_account', __biz):
+            WechatAction._wechat_service.add_account_info(account_info)
 
     def __parse_article_list(self, article_list):
         '''
@@ -175,7 +261,7 @@ class WechatAction():
         ---------
         @result:
         '''
-        log.debug(tools.dumps_json(article_list))
+        # log.debug(tools.dumps_json(article_list))
 
         # 解析json内容里文章信息
         def parse_article_info(article_info, release_time):
@@ -189,13 +275,13 @@ class WechatAction():
             source_url = article_info.get('source_url').replace('\\', '')  # 引用的文章链接
             cover = article_info.get('cover').replace('\\', '')
             author = article_info.get('author')
-            if url: # 被发布者删除的文章 无url和其他信息， 此时取不到mid 且不用入库
+            if url and url.startswith('http://mp.weixin.qq.com/'):# 被发布者删除的文章 无url和其他信息， 此时取不到mid 且不用入库, 或者商城类的url不入库
                 mid = tools.get_param(url, 'mid') or tools.get_param(url, 'appmsgid') # 图文消息id 同一天发布的图文消息 id一样
                 idx = tools.get_param(url, 'idx') or tools.get_param(url, 'itemidx')# 第几条图文消息 从1开始
                 article_id = mid + idx # 用mid和idx 拼接 确定唯一一篇文章 如mid = 2650492260  idx = 1，则article_id = 26504922601
 
                 # 判断该文章库中是否已存在
-                if self._wechat_service.is_exist('wechat_article', article_id):
+                if WechatAction._wechat_service.is_exist('wechat_article', article_id) or (ONLY_TODAY_MSG and release_time < tools.get_current_date('%Y-%m-%d')):
                     self._is_need_get_more  = False
                     return # 不往下进行 舍弃之后的文章
 
@@ -352,7 +438,7 @@ class WechatAction():
                 WechatAction._article_info[article_id]['content'] = content
 
                 # 入库
-                self._wechat_service.add_article_info(WechatAction._article_info.pop(article_id))
+                WechatAction._wechat_service.add_article_info(WechatAction._article_info.pop(article_id))
 
             # 如果下一页是文章列表的链接， 替换文章列表中的appmsg_token,防止列表链接过期
             if (len(WechatAction._todo_urls) == 1) and ('/mp/profile_ext' in WechatAction._todo_urls[-1]):
@@ -418,7 +504,7 @@ class WechatAction():
         WechatAction._article_info[article_id]['like_num'] = like_num
 
         if not data.get('comment_enabled'): # 无评论区，不请求get_comment 函数，此时直接入库
-            self._wechat_service.add_article_info(WechatAction._article_info.pop(article_id))
+            WechatAction._wechat_service.add_article_info(WechatAction._article_info.pop(article_id))
 
 
     def get_comment(self, data, req_url):
@@ -435,7 +521,7 @@ class WechatAction():
         # 缓存文章评论信息
         WechatAction._article_info[article_id]['comment'] = comment
 
-        self._wechat_service.add_article_info(WechatAction._article_info.pop(article_id))
+        WechatAction._wechat_service.add_article_info(WechatAction._article_info.pop(article_id))
 
     def deal_request(self, name):
         web.header('Content-Type','text/html;charset=UTF-8')
@@ -482,5 +568,5 @@ class WechatAction():
 
 if __name__ == '__main__':
     wechat_action = WechatAction()
-    sleep_time = wechat_action.get_sleep_time()
-    print(sleep_time)
+    next_day_time_interval = wechat_action.get_next_day_time_interval()
+    print(next_day_time_interval)

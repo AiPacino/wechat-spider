@@ -15,7 +15,7 @@ import init
 import utils.tools as tools
 from utils.log import log
 import random
-import constance
+from base import constance
 
 # 会过期
 TOOKEN = 2103841294
@@ -48,6 +48,7 @@ class WechatPublicPlatform():
         '''
 
         keyword = account_id or account # 账号id优先
+        log.debug('search keywords ' + keyword)
         __biz = ''
 
         url = 'https://mp.weixin.qq.com/cgi-bin/searchbiz'
@@ -90,6 +91,8 @@ class WechatPublicPlatform():
         @result:
         '''
 
+        log.debug('search keywords ' + __biz)
+
         url = 'https://mp.weixin.qq.com/cgi-bin/appmsg'
         params = {
             "lang": "zh_CN",
@@ -106,6 +109,7 @@ class WechatPublicPlatform():
         }
 
         articles_json = tools.get_json_by_requests(url, params = params, headers = HEADERS)
+        # print(articles_json)
 
         # TOOLEN 过期 返回 {'base_resp': {'err_msg': 'invalid csrf token', 'ret': 200040}}
         article_list = articles_json.get('app_msg_list', [])

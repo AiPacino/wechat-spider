@@ -155,3 +155,19 @@ class ES(Singleton):
 
 if __name__ == '__main__':
     es = ES()
+    body = {
+        "size":0,
+        "query":{
+            "filtered":{
+
+                "query":{
+                'match':{
+                    "__biz" : "MjM5NDEwNjUyNQ=="
+                }}
+            }
+        }
+    }
+    result = es.search('wechat_article', body)
+    print(result)
+    count = result.get('hits', {}).get('total', 0)
+    print(count)
