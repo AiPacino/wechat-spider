@@ -71,7 +71,8 @@ class ES(Singleton):
             datas = self._es.get(index = table, doc_type = doc_type, id = data_id)
 
         except Exception as e:
-            log.error(e)
+            # log.error(e)
+            pass
 
         return datas
 

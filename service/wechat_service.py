@@ -204,7 +204,7 @@ class WechatService():
                 break
 
             # 使用检查新文章时，有一定的几率跳出， 采用微信客户端直接爬取，防止搜狗微信使用频繁出现验证码
-            if random.randint(1, 3) == 1:
+            if random.randint(1, 5) == 1:
                 log.debug('跳出 防止搜狗微信被封')
                 break
 
