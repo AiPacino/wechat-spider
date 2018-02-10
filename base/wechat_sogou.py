@@ -16,15 +16,18 @@ import utils.tools as tools
 from utils.log import log
 from base import ip_proxies
 from base import constance
+from base.sogou_cookies_manager import SogouCookiesManager
 
 class WechatSogou():
     def __init__(self):
-        pass
+        self._sogou_cookies_manager = SogouCookiesManager()
 
     def __get_account_blocks(self, account_id = '', account = ''):
         keyword = account_id or account # 账号id优先
 
         log.debug('search keywords ' + keyword)
+
+        cookie = self._sogou_cookies_manager.get_cookie()
 
         headers = {
             "Upgrade-Insecure-Requests": "1",
@@ -34,10 +37,7 @@ class WechatSogou():
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
             "Accept-Language": "zh-CN,zh;q=0.8",
             "Accept-Encoding": "gzip, deflate",
-            # "Cookie": "IPLOC=CN1100; ld=4yllllllll2zj$kYlllllVo3$xklllllWT89eyllll9lllllRklll5@@@@@@@@@@; SUV=00E3555B7B7CC4C55A0AA8195254D871; CXID=150E3ABE3C35F9E55217835F7720E719; ABTEST=8|1510801558|v1; LSTMV=418%2C28; LCLKINT=2070; ad=8kllllllll2zRlPflllllVoSynYlllllWT89eyllllwlllll9Cxlw@@@@@@@@@@@; SUID=C5C47C7B1508990A000000005A0AA818; weixinIndexVisited=1; JSESSIONID=aaa-1KvS1lhung8pB9v8v; sct=20; PHPSESSID=k3c9psast34njs32vjm3pas3l1; SUIR=E8E851562D28732A6B711C802DECBC6F; seccodeErrorCount=1|Tue, 28 Nov 2017 11:11:05 GMT; SNUID=A1A0181864613C6A610582E26446EC9A; successCount=1|Tue, 28 Nov 2017 11:11:22 GMT",
-            # "Cookie": "SUID=C5C47C7B642E940A000000005A433ED6; weixinIndexVisited=1; SUV=00D35AA37B7CC4C55A433ED7D037F067; CXID=EEC0B251914816DC49ECFDC173DAABF6; SUID=C5C47C7B2313940A000000005A433ED6; ABTEST=0|1517362980|v1; SUIR=85FB3C3B403A2437DABF41FC408BBA2F; ad=qUl2Slllll2zSGdWlllllVIhtOwlllllWT89eyllllwllllllvoll5@@@@@@@@@@; ld=qlllllllll2zUmYflllllVIhW29lllllWT89eyllll9llllllylll5@@@@@@@@@@; IPLOC=CN1100; SNUID=999820275C59382AD1C30E4D5CC2FE36; JSESSIONID=aaaWiijNPNBxPfnxJijew; sct=18",
-            # "Cookie":"ABTEST=5|1518054397|v1; SNUID=EAEB52552E2B4B87BB3903692F2AC2DE; IPLOC=CN1100; SUID=C5C47C7B6E2F940A000000005A7BABFD; JSESSIONID=aaa2WHQuoILPuc70EEQfw; SUID=C5C47C7B2313940A000000005A7BABFE; SUV=00BC2C447B7CC4C55A7BABFE845F5410",
-            "Cookie":"ABTEST=5|1518054397|v1; SNUID=EAEB52552E2B4B87BB3903692F2AC2DE; IPLOC=CN1100; SUID=C5C47C7B6E2F940A000000005A7BABFD; JSESSIONID=aaa2WHQuoILPuc70EEQfw; SUID=C5C47C7B2313940A000000005A7BABFE; SUV=00BC2C447B7CC4C55A7BABFE845F5410",
+            "Cookie":cookie[1] if cookie else "ABTEST=5|1518054397|v1; SNUID=EAEB52552E2B4B87BB3903692F2AC2DE; IPLOC=CN1100; SUID=C5C47C7B6E2F940A000000005A7BABFD; JSESSIONID=aaa2WHQuoILPuc70EEQfw; SUID=C5C47C7B2313940A000000005A7BABFE; SUV=00BC2C447B7CC4C55A7BABFE845F5410",
             "Host": "weixin.sogou.com"
         }
 
@@ -59,7 +59,12 @@ class WechatSogou():
                       '''%(check_info, url)
                       )
 
-            return constance.VERIFICATION_CODE
+            self._sogou_cookies_manager.set_cookie_un_available(cookie)
+            self._sogou_cookies_manager.monitor_cookies()
+
+            # return constance.VERIFICATION_CODE
+        else:
+            self._sogou_cookies_manager.set_cookie_available(cookie)
 
         for account_block in account_blocks:
             regex = '<a.*?account_name.*?>(.*?)</a>'

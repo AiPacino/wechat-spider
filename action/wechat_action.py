@@ -31,8 +31,8 @@ from service.wechat_service import WechatService
 
 MIN_SLEEP_TIME = 10000 # 每个历史列表、文章详情时间间隔  毫秒
 MAX_SLEEP_TIME = 15000
-MIN_WAIT_TIME = 1000 * 60 * 60 # 做完所有公众号后休息的时间，然后做下一轮
-MAX_WAIT_TIME = 1000 * 60 * 60 * 2
+MIN_WAIT_TIME = 1000 * 60 * 60 * 6 # 做完所有公众号后休息的时间，然后做下一轮
+MAX_WAIT_TIME = 1000 * 60 * 60 * 8
 
 ONLY_TODAY_MSG = int(tools.get_conf_value('config.conf', 'spider', 'only_today_msg'))
 SPIDER_START_TIME = tools.get_conf_value('config.conf', 'spider', 'spider_start_time')

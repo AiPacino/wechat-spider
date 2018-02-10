@@ -71,11 +71,9 @@ class ES(Singleton):
             datas = self._es.get(index = table, doc_type = doc_type, id = data_id)
 
         except Exception as e:
-            # log.error(e)
-            pass
+            log.error(e)
 
-        else:
-            return datas
+        return datas
 
 
     def search(self, table, body = {}):
@@ -96,9 +94,8 @@ class ES(Singleton):
 
         except Exception as e:
             log.error(e)
-            return str(e)
-        else:
-            return datas
+
+        return datas
 
     def update_by_id(self, table, data_id, data, doc_type = ''):
         '''

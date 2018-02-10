@@ -216,7 +216,7 @@ class WechatService():
                 if WechatService._is_done: # 防止公众号都没更新， 产生死循环 都检查完一遍 发现都没更新  直接跳出
                     break
                 else:
-                    tools.delay_time(15)
+                    # tools.delay_time(5)
                     continue
             elif result == constance.ERROR:
                 break
