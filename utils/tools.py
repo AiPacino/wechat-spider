@@ -67,7 +67,7 @@ def run_safe_model(module_name):
     return inner_run_safe_model
 #######################################################
 def get_html_auto_deal_code(url):
-    html = None
+    html = ''
     try:
         page = request.urlopen(quote(url,safe='/:?=&'), timeout = 3)
         html = page.read()
@@ -85,7 +85,7 @@ def get_html_auto_deal_code(url):
 # import chardet
 @log_function_time
 def get_html_by_urllib(url, code = 'utf-8', headers = {}, proxies = {}):
-    html = None
+    html = ''
     if not url.endswith('.exe') and not url.endswith('.EXE'):
         page = None
         is_timeout = False
@@ -120,7 +120,7 @@ def get_html_by_urllib(url, code = 'utf-8', headers = {}, proxies = {}):
 
 @log_function_time
 def get_html_by_webdirver(url, proxies = ''):
-    html = None
+    html = ''
     try:
 
         driver = webdriver.PhantomJS()
@@ -143,7 +143,7 @@ def get_html_by_webdirver(url, proxies = ''):
 
 # @log_function_time
 def get_html_by_requests(url, headers = '', code = 'utf-8', data = None, proxies = {}):
-    html = None
+    html = ''
     if not url.endswith('.exe') and not url.endswith('.EXE'):
         r = None
         try:
