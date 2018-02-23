@@ -116,7 +116,7 @@ def get_html_by_urllib(url, code = 'utf-8', headers = {}, proxies = {}):
             if page and not is_timeout:
                 page.close()
 
-    return html and len(html) < 1024 * 1024 and html or None
+    return html and len(html) < 1024 * 1024 and html or ''
 
 @log_function_time
 def get_html_by_webdirver(url, proxies = ''):
@@ -139,7 +139,7 @@ def get_html_by_webdirver(url, proxies = ''):
         driver.close()
     except Exception as e:
         log.error(e)
-    return html and len(html) < 1024 * 1024 and html or None
+    return html and len(html) < 1024 * 1024 and html or ''
 
 # @log_function_time
 def get_html_by_requests(url, headers = '', code = 'utf-8', data = None, proxies = {}):
@@ -161,7 +161,7 @@ def get_html_by_requests(url, headers = '', code = 'utf-8', data = None, proxies
         finally:
             r and r.close()
 
-    return html and len(html) < 1024 * 1024 and html or None, r
+    return html and len(html) < 1024 * 1024 and html or '', r
 
 
 def get_json_by_requests(url, params = None, headers = '', data = None, proxies = {}):
