@@ -527,18 +527,18 @@ username为历史文章列表数据里的username字段值, 如var username = ""
 
 1. 可通过微信公众平台，新建图文链接时，可以加入超链接。点击查找文章，输入公众号名，分析数据包可得`fakeid`参数，即为biz值。如图：
 
-   ![](https://i.imgur.com/qcS8YCh.png)
-    <p align="center">**搜索公众号 图1**</p>
+    ![](https://i.imgur.com/qcS8YCh.png)
+    **<p align="center">搜索公众号 图1</p>**
     ![](https://i.imgur.com/NoJV5KX.png)
-    <p align="center">**查看fakeid 图2**</p>
+    **<p align="center">查看fakeid 图2</p>**
 
 2.可通过搜狗微信搜索公众号，进入公众号详情页，查看源代码，正则提取`var biz =`参数得知。如图：
     ![](https://i.imgur.com/hSWzsZD.png)
-    <p align="center">**搜索公众号 图1**</p>
+    **<p align="center">搜索公众号 图1</p>**
     ![](https://i.imgur.com/8DUpVQt.png)
-    <p align="center">**进入公众号 图2**</p>
+    **<p align="center">进入公众号 图2</p>**
     ![](https://i.imgur.com/lNeJ8on.png)
-    <p align="center">**查看源代码 图3**</p>
+    **<p align="center">查看源代码 图3</p>**
 
 
 ----------
