@@ -10,7 +10,7 @@
 
 1、数据结构
 ----
-###1.1、 公众号表 ###
+### 1.1、 公众号表 ###
 > 表名`wechat_account`
 
 
@@ -350,7 +350,7 @@ username为历史文章列表数据里的username字段值, 如var username = ""
 3. 微信客户端
 4. python3.5
 
-### 3.2 环境搭建###
+### 3.2 环境搭建 ###
 3.2.1 anyproxy搭建
 
 1. 安装anyproxy代理，下载地址：[https://github.com/liubo0621/node-v6.11.0-win-x64_wechat](https://github.com/liubo0621/node-v6.11.0-win-x64_wechat)
