@@ -544,8 +544,18 @@ username为历史文章列表数据里的username字段值, 如var username = ""
 ----------
 技术交流
 ----
-若大家有什么疑问或指教，可加我微信，一起讨论问题。请备注`微信爬虫学习交流`
+若大家有什么疑问或指教，可加我微信或qq群，一起讨论问题。请备注`微信爬虫学习交流`
+<table>
+<tr>
+<td width = "250" align = "center">
 <div> 
-<img src='https://i.imgur.com/HkECUT2.jpg' align = 'center' width = "250">
+<img src='https://i.imgur.com/HkECUT2.jpg' align = 'center' width = "200">
+<p>微信<br>(因工作繁忙,不能及时回复)</p>
 </div>
-
+</td>
+<td width = "250" align = "center">
+<div> 
+<img src='https://i.imgur.com/5FM26rc.png' align = 'center' width = "250">
+</div>
+</td>
+<tr>
