@@ -177,6 +177,8 @@ username为历史文章列表数据里的username字段值, 如var username = ""
 2.2.4 点赞量、阅读量
 
 1. 访问文章详情url时，微信客户端会主动发起阅读量和点赞量的请求，请求地址如下（该地址我们不需要关心，只需截获返回的数据包即可）：<pre>https://mp.weixin.qq.com/mp/getappmsgext?__biz=MzIzOTU0NTQ0MA==&appmsg_type=9&mid=2247486197&sn=7c52f13abdc0301aad1e6f52c3d94e54&idx=1&scene=38&title=%E5%8F%8C11%E8%A6%81%E6%9D%A5%E4%BA%86%EF%BC%8C%E9%98%BF%E9%87%8C%E6%8B%9B%E4%BA%86%E4%B8%80%E6%89%B9%E8%BA%AB%E6%80%80%E7%BB%9D%E6%8A%80%E7%9A%84%E6%8A%80%E6%9C%AF%E6%96%B0%E7%AB%A5%E9%9E%8B%EF%BC%81&ct=1509616500&abtest_cookie=AgABAAoADAAIAEuIHgCCiB4ArogeALqIHgDniB4A/IgeAA+JHgBGiR4AAAA=&devicetype=iOS11.1.1&version=&f=json&r=0.8818055899366186&is_need_ad=1&comment_id=2113125141&is_need_reward=0&both_ad=0&reward_uin_count=0&msg_daily_idx=1&is_original=0&uin=777&key=777&pass_ticket=1vn9nCwlFpfowKXpKyZHFzzB64gF3f62hcV6RIiZApKABY7R6EnSDiBuYcnK4sSD&wxtoken=3465907592&devicetype=iOS11.1.1&clientversion=16051620&appmsg_token=931_qHpqa2KzvFlDJD%252B7tv6FD3A49fuOZPxAU-vg52-Nbp1TT5RK8WtZThpX7XJbKewFocNg9T2Eb6idZ8_X&x5=0&f=json</pre>
+
+    改版后(2018-4-13)：<pre>https://mp.weixin.qq.com/mp/getappmsgext?f=json&uin=777&key=777&pass_ticket=vP3zWHMb0nWialMjpUMIXN7S5XydXddgU8Oc6l3sxfPZ9JDPgFp8HarU%25252Be%25252Fkc%25252BCI&wxtoken=777&devicetype=iOS11.3&clientversion=16060622&appmsg_token=952_0AtWRCoKHVN1zLxcdp5omIgLpGNcFZUOYaaK0U0RXa_At7HzvH4uEnuf2VwwimMWtUyxM924xVobwRCr&x5=0&f=json</pre>通过appmsg_token和文章关联，其他参数和文章没有关系（文章源代码里appmsg_token值与该地址中的值相同）
    
 2. 数据包如下
     <pre>

@@ -54,6 +54,7 @@ class WechatAction():
     }
 
     _current_account_biz = ''
+    _current_aritcle_id = None
 
     def __init__(self):
         self._is_need_get_more = True # 是否需要获取更多文章。 当库中该条文章存在时，不需要获取更早的文章，默认库中已存在。如今天的文章库中已经存在了，如果爬虫一直在工作，说明昨天的文章也已经入库，增量试
@@ -421,6 +422,7 @@ class WechatAction():
             mid = tools.get_param(req_url, 'mid') or tools.get_param(req_url, 'appmsgid') # 图文消息id 同一天发布的图文消息 id一样
             idx = tools.get_param(req_url, 'idx') or tools.get_param(req_url, 'itemidx') # 第几条图文消息 从1开始
             article_id = mid + idx # 用mid和idx 拼接 确定唯一一篇文章 如mid = 2650492260  idx = 1，则article_id = 26504922601
+            WechatAction._current_aritcle_id = article_id # 记录当前文章的id 为获取评论信息时找对应的文章id使用
 
             regex = '(<div class="rich_media_content " id="js_content">.*?)<script nonce'
             content = tools.get_info(data, regex, fetch_one = True)
@@ -491,9 +493,12 @@ class WechatAction():
 
         req_url = req_url.replace('amp;', '')
 
-        mid = tools.get_param(req_url, 'mid') # 图文消息id 同一天发布的图文消息 id一样
-        idx = tools.get_param(req_url, 'idx') # 第几条图文消息 从1开始
-        article_id = mid + idx # 用mid和idx 拼接 确定唯一一篇文章 如mid = 2650492260  idx = 1，则article_id = 26504922601
+        # 2018-04-13 微信版本更新 地址中无mid与idx参数 article_id拼不出来
+        # mid = tools.get_param(req_url, 'mid') # 图文消息id 同一天发布的图文消息 id一样
+        # idx = tools.get_param(req_url, 'idx') # 第几条图文消息 从1开始
+        # article_id = mid + idx # 用mid和idx 拼接 确定唯一一篇文章 如mid = 2650492260  idx = 1，则article_id = 26504922601
+
+        article_id = WechatAction._current_aritcle_id # 直接取
 
         data = tools.get_json(data)
         read_num = data.get('appmsgstat', {}).get('read_num')
