@@ -549,15 +549,27 @@ username为历史文章列表数据里的username字段值, 如var username = ""
 若大家有什么疑问或指教，可加我微信或qq群，一起讨论问题。请备注`微信爬虫学习交流`
 <table>
 <tr>
-<td width = "250" align = "center">
+<td width = "250" align = "center"> 
 <div> 
-<img src='https://i.imgur.com/HkECUT2.jpg' align = 'center' width = "200">
-<p>微信<br>(因工作繁忙,不能及时回复)</p>
+<img src='https://i.imgur.com/5FM26rc.png' align = 'center' width = "250" style = "margin-top:20px">
+</div>
+
+</td>
+<div>
+
+<td width = "250" align = "center">
+<img src='https://i.imgur.com/HkECUT2.jpg' align = 'center' width = "220" style = "margin-top:40px">
+<p>微信</p>
 </div>
 </td>
+
 <td width = "250" align = "center">
 <div> 
-<img src='https://i.imgur.com/5FM26rc.png' align = 'center' width = "250">
+<img src='https://i.imgur.com/J4ewrYa.png' align = 'center' width = "250">
+<p>支持我 鼓励一下下~</p>
 </div>
 </td>
 <tr>
+</table>
+
+<font color = "red">您的鼓励是我完善代码与服务的最大动力。如果此篇文档帮得到您，不防鼓励我一下哦，谢谢~</font>
