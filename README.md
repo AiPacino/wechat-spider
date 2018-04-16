@@ -558,12 +558,6 @@ username为历史文章列表数据里的username字段值, 如var username = ""
 <div>
 
 <td width = "250" align = "center">
-<img src='https://i.imgur.com/HkECUT2.jpg' align = 'center' width = "220" style = "margin-top:40px">
-<p>微信</p>
-</div>
-</td>
-
-<td width = "250" align = "center">
 <div> 
 <img src='https://i.imgur.com/J4ewrYa.png' align = 'center' width = "250">
 <p>支持我 鼓励一下下~</p>
