@@ -18,8 +18,8 @@ import random
 from base import constance
 
 # 会过期
-TOOKEN = 2103841294
-COOKIE = 'pgv_pvi=5528556544; RK=XamCagaLPm; pac_uid=1_564773807; gaduid=5a66dad580d5b; pt2gguin=o0564773807; ptcz=e30ece25da8051fa18d7817693d6ad2b88c9961b4e54f1138a8c8f73883d2fef; pgv_pvid=6169397048; o_cookie=564773807; ua_id=CJCj6o73zn173CMUAAAAAHJD5fGqeruUXpS_2f5xMas=; mm_lang=zh_CN; noticeLoginFlag=1; p_o2_uin=564773807; pgv_si=s4708166656; uuid=5da383467cc4a47719b7d7a71b0e4e46; ticket=61db0e5c0e14130718f4a673bff454de66660c5c; ticket_id=gh_870ffb1242a7; cert=T8J7ocwh3ADLXJ1S9dk8KJSLSATIHmrx; data_bizuin=2392640165; bizuin=2392713418; data_ticket=O7VD9Eq4SY/x586Ngf66ciUeRrONhqQT8NgwnXhGfG3Ib8h+mq1zG9BFwbjFMGi2; slave_sid=T21USXBWWTNScl90U3JpN0V0N3JKVGJ1QXE1WFNFU1p5bk9fNl8yTkh5bDNfWWt5cldiQjVTRmplNnRIbmt3MGhDV2RvX2RqRm8wTGpVWjhiVkpNT0xjOGlBc1hRRVNkc0dLU3FJMl83R3Q4cXVnaFQ1ZzN5a3dMQ0hPQXNLTFJGMlA3ekJSekRRNTZRWm9H; slave_user=gh_870ffb1242a7; xid=e714db65138e653bf39efae55e12a553; openid2ticket_opcqcjrNnRf62olc2Aj4PIU2hq9E=zPpw5rBj+i2dt5o2mnscwloF2BtqpMum7t+AJvMCXFU='
+TOOKEN = 612595917
+COOKIE = 'pt2gguin=o0564773807; RK=+SiAfCawcG; ptcz=98ae93f254a1243594c63affbd2ae9d0367d77b2588595244d07078663b8187d; pgv_pvi=5505806336; ua_id=cQxWYqcusnfgfyJRAAAAAMtRIxjN71vfjRZJVB7SSrI=; mm_lang=zh_CN; pgv_si=s1046547456; uuid=2a06411275489442a6ac6eca9706b3ec; ticket=d0d10873ee1859ada1d80fca7614e8b51f0f6b5e; ticket_id=gh_870ffb1242a7; cert=EMyCfZbqlJnye8hM2EYrLSKpJZGwz7vr; noticeLoginFlag=1; data_bizuin=2392640165; bizuin=2392713418; data_ticket=SIYSUqPkCQp9JD1YW8kkG9CRAN1DmvS0OMBHgDs8wRhnMGXJuyoj2F1DSmoaz4u7; slave_sid=NXRHU2NRWlc4UXdFTWY3aDgzNEtCYXBiNEo2dUt0eGwyRU9rXzdXQmZmMU82aXJ2ZGszMEdmZ2dKM0o3WjNFRGlvU1ZVNmlHaUJ5ZWlyQ1BjM2FwUmdkYktyNXB1TGwxWUtGNGFGNlRFZWxpcmZicmcxRGlnOGgwZDdnbldPMUFyN20zUnNuVkpEOGJ6VjNn; slave_user=gh_870ffb1242a7; xid=4e39a4b0bbd300da27388eefb7736403; openid2ticket_opcqcjrNnRf62olc2Aj4PIU2hq9E=w+0y1LGAvUVlfyUBIlzHiP0ApUnH6vVFH/U4/frvwos='
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36",
@@ -129,7 +129,7 @@ class WechatPublicPlatform():
 
 if __name__ == '__main__':
     wechat_public_platform = WechatPublicPlatform()
-    # biz = wechat_public_platform.get_biz(account_id = '', account = 'coder_life')
-    # print(biz)
+    biz = wechat_public_platform.get_biz(account_id = '', account = 'coder_life')
+    print(biz)
     is_have_new_article = wechat_public_platform.is_have_new_article('MjM5NDEwNjUyNQ==')
     print(is_have_new_article)
