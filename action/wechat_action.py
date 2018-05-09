@@ -423,7 +423,7 @@ class WechatAction():
             idx = tools.get_param(req_url, 'idx') or tools.get_param(req_url, 'itemidx') # 第几条图文消息 从1开始
             article_id = mid + idx # 用mid和idx 拼接 确定唯一一篇文章 如mid = 2650492260  idx = 1，则article_id = 26504922601
             WechatAction._current_aritcle_id = article_id # 记录当前文章的id 为获取评论信息时找对应的文章id使用
-
+            print('当前id' + WechatAction._current_aritcle_id)
             regex = '(<div class="rich_media_content " id="js_content">.*?)<script nonce'
             content = tools.get_info(data, regex, fetch_one = True)
             if content:
@@ -440,6 +440,7 @@ class WechatAction():
                 WechatAction._article_info[article_id]['content'] = content
 
                 # 入库
+                print('被验证不实的文章，不会请求观看点赞数，此时直接入库')
                 WechatAction._wechat_service.add_article_info(WechatAction._article_info.pop(article_id))
 
             # 如果下一页是文章列表的链接， 替换文章列表中的appmsg_token,防止列表链接过期
@@ -508,25 +509,26 @@ class WechatAction():
         WechatAction._article_info[article_id]['read_num'] = read_num
         WechatAction._article_info[article_id]['like_num'] = like_num
 
-        if not data.get('comment_enabled'): # 无评论区，不请求get_comment 函数，此时直接入库
-            WechatAction._wechat_service.add_article_info(WechatAction._article_info.pop(article_id))
+        # if not data.get('comment_enabled'): # 无评论区，不请求get_comment 函数，此时直接入库
+        WechatAction._wechat_service.add_article_info(WechatAction._article_info.pop(article_id))
 
 
     def get_comment(self, data, req_url):
         log.debug('获取评论信息')
 
-        req_url = req_url.replace('amp;', '')
-        mid = tools.get_param(req_url, 'appmsgid') # 图文消息id 同一天发布的图文消息 id一样
-        idx = tools.get_param(req_url, 'idx') # 第几条图文消息 从1开始
-        article_id = mid + idx # 用mid和idx 拼接 确定唯一一篇文章 如mid = 2650492260  idx = 1，则article_id = 26504922601
+        # req_url = req_url.replace('amp;', '')
+        # mid = tools.get_param(req_url, 'appmsgid') # 图文消息id 同一天发布的图文消息 id一样
+        # idx = tools.get_param(req_url, 'idx') # 第几条图文消息 从1开始
+        # # article_id = mid + idx # 用mid和idx 拼接 确定唯一一篇文章 如mid = 2650492260  idx = 1，则article_id = 26504922601
+        # article_id = WechatAction._current_aritcle_id # 直接取
 
-        data = tools.get_json(data)
-        comment = data.get('elected_comment', []) # 精选留言
+        # data = tools.get_json(data)
+        # comment = data.get('elected_comment', []) # 精选留言
 
-        # 缓存文章评论信息
-        WechatAction._article_info[article_id]['comment'] = comment
+        # # 缓存文章评论信息
+        # WechatAction._article_info[article_id]['comment'] = comment
 
-        WechatAction._wechat_service.add_article_info(WechatAction._article_info.pop(article_id))
+        # WechatAction._wechat_service.add_article_info(WechatAction._article_info.pop(article_id))
 
     def deal_request(self, name):
         web.header('Content-Type','text/html;charset=UTF-8')
