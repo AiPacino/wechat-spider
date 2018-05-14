@@ -430,7 +430,7 @@ class WechatAction():
                 # 缓存文章内容
                 WechatAction._article_info[article_id]['content'] = content
                 # 取公众号名
-                regex = '<span class="rich_media_meta rich_media_meta_text rich_media_meta_nickname">(.*?)</span>'
+                regex = '<title>(.*?)</title>'
                 account = tools.get_info(data, regex, fetch_one = True)
                 WechatAction._article_info[article_id]['account'] = account
 
