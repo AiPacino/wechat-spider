@@ -29,8 +29,8 @@ import random
 from service.wechat_service import WechatService
 
 
-MIN_SLEEP_TIME = 10000 # 每个历史列表、文章详情时间间隔  毫秒
-MAX_SLEEP_TIME = 15000
+MIN_SLEEP_TIME = 30000 # 每个历史列表、文章详情时间间隔  毫秒
+MAX_SLEEP_TIME = 65000
 MIN_WAIT_TIME = 1000 * 60 * 60 * 6 # 做完所有公众号后休息的时间，然后做下一轮
 MAX_WAIT_TIME = 1000 * 60 * 60 * 8
 
@@ -300,8 +300,8 @@ class WechatAction():
                     'account':'',
                     'author' : author,
                     '__biz' : __biz,
-                    'read_num' : 'null',
-                    'like_num' : 'null',
+                    'read_num' : None,
+                    'like_num' : None,
                     'content' : '',
                     'comment' : [],
                     'record_time':tools.get_current_date()
@@ -424,7 +424,7 @@ class WechatAction():
             article_id = mid + idx # 用mid和idx 拼接 确定唯一一篇文章 如mid = 2650492260  idx = 1，则article_id = 26504922601
             WechatAction._current_aritcle_id = article_id # 记录当前文章的id 为获取评论信息时找对应的文章id使用
             print('当前id' + WechatAction._current_aritcle_id)
-            regex = '(<div class="rich_media_content " id="js_content">.*?)<script nonce'
+            regex = '(<div class="rich_media_content ".*?)<script nonce'
             content = tools.get_info(data, regex, fetch_one = True)
             if content:
                 # 缓存文章内容
