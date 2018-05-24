@@ -23,7 +23,7 @@ import random
 SIZE = 100
 TIME_INTERVAL = 24 * 60 * 60
 
-CHECK_NEW_ARTICLE = True  # 有新发布的文章才爬取
+CHECK_NEW_ARTICLE = int(tools.get_conf_value('config.conf', 'spider', 'only_today_msg'))  # 有新发布的文章才爬取
 
 class WechatService():
     _db = OracleDB()
@@ -301,8 +301,9 @@ class WechatService():
             标题     %s
             发布时间 %s
             作者     %s
+            公众号   %s
             url      %s
-            '''%(article_info['title'], article_info['release_time'], article_info['author'], article_info['url'])
+            '''%(article_info['title'], article_info['release_time'], article_info['author'], article_info['account'], article_info['url'])
             )
 
         WechatService._es.add('wechat_article', article_info, article_info.get('article_id'))

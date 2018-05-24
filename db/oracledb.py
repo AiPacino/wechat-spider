@@ -42,6 +42,7 @@ class OracleDB(Singleton):
         if not hasattr(self,'conn'):
             try:
                 self.conn = cx_Oracle.connect(user_name, user_pass, '%s:%d/%s'%(ip, port, db))#, threaded=True,events = True)
+                # self.conn = cx_Oracle.connect('%s/%s@%s'%(user_name,user_pass,db))
                 self.cursor = self.conn.cursor()
             except Exception as e:
                 raise
